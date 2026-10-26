@@ -13,13 +13,13 @@ canvas{width:100%;display:block;image-rendering:pixelated}
 #m{position:absolute;right:6px;top:6px;width:34px;height:34px;border-radius:50%;border:0;background:#0006;color:#fff;font-size:16px}
 #p{position:absolute;right:6px;top:46px;width:34px;height:34px;border-radius:50%;border:0;background:#0006;color:#fff;font-size:15px}
 #rc,#rb{position:absolute;bottom:8px;padding:8px 12px;border-radius:18px;border:0;background:#fffe;color:#222;font-size:13px}
-#rc{right:8px}#rb{left:8px}
+#rc{right:8px}#rb{left:8px}#rp{position:absolute;right:6px;top:86px;width:34px;height:34px;border-radius:50%;border:0;background:#0006;color:#fff;font-size:16px}
 #ov{position:absolute;inset:0;background:#000b;display:none;align-items:center;justify-content:center;color:#fff}
 #ov>div{display:none;flex-direction:column;align-items:center;gap:9px}
 #ov button{font-size:15px;padding:8px 20px;border-radius:20px;border:0;background:#fff;color:#222}
 #pi{max-width:85%;max-height:62%;-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto}
 </style></head><body>
-<div id="w"><canvas id="c" width="480" height="270"></canvas><button id="m">♪</button><button id="p">⏸</button>
+<div id="w"><canvas id="c" width="480" height="270"></canvas><button id="m">♪</button><button id="p">⏸</button><button id="rp" style="display:none">🎥</button>
 <button id="rc" style="display:none">📷 記録を保存</button><button id="rb" style="display:none">← おねぼうカード</button>
 <div id="ov"><div id="pm"><b style="font-size:22px">ポーズ</b><button id="b1">▶ つづける</button><button id="b2">↻ リスタート</button><button id="b3">📷 思い出を撮る</button><button id="b4">← おねぼうカードへ</button></div>
 <div id="ph"><img id="pi" alt=""><span style="font-size:13px">画像を長押しで保存できます</span><button id="b5">もどる</button></div></div></div>
@@ -43,6 +43,7 @@ const spr=new Image();spr.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADA
 let st='title',stage=1,dist=0,sp=2.6,L=1700,obs=[],P={y:GY,vy:0,dj:0},ammo=0,bison=0,wrap=0,cd=0,buf=0,proj=[],fx=[],banner=0,f=0,it=0,tm=0,plane=0,planeX=-260,onN=0;
 let AC,M,mute=0,bi=0,nextT=0,NB;
 let giant=0,slide=0,paused=0,pend='',ban='',pap=3,tipSeen={},tipT=0,slow=0,frogStage=7,frogX=0,salt=0;
+const RP=document.getElementById('rp'),RING=[],RN=80;let rcnt=0,rpos=0,rpl=0,rpi=0;
 const RC=document.getElementById('rc'),RB=document.getElementById('rb');
 const WID={m:36,b:18,n:70,o:22,h:56,f:18};
 function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
@@ -85,6 +86,7 @@ const f_=n=>261.63*Math.pow(2,n/12);
 function aud(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();M=AC.createGain();M.gain.value=mute?0:1;M.connect(AC.destination);nextT=AC.currentTime+.1;setInterval(sched,30)}catch(e){AC=null}}if(AC&&AC.state=='suspended')AC.resume()}
 function tone(fr,t0,d,ty,v,fe){if(!AC)return;const o=AC.createOscillator(),gn=AC.createGain();o.type=ty;o.frequency.setValueAtTime(fr,t0);if(fe)o.frequency.exponentialRampToValueAtTime(fe,t0+d);gn.gain.setValueAtTime(v,t0);gn.gain.exponentialRampToValueAtTime(.001,t0+d);o.connect(gn);gn.connect(M);o.start(t0);o.stop(t0+d+.02)}
 function noise(t0,d,v){if(!AC)return;const b=AC.createBuffer(1,Math.max(1,AC.sampleRate*d|0),AC.sampleRate),a=b.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=Math.random()*2-1;const s=AC.createBufferSource(),gn=AC.createGain();s.buffer=b;gn.gain.setValueAtTime(v,t0);gn.gain.exponentialRampToValueAtTime(.001,t0+d);s.connect(gn);gn.connect(M);s.start(t0)}
+function strike(fr,t0,d,v){if(!AC)return;const o=AC.createOscillator(),gn=AC.createGain();o.type='sine';o.frequency.value=fr;gn.gain.setValueAtTime(.0001,t0);gn.gain.linearRampToValueAtTime(v,t0+.002);gn.gain.exponentialRampToValueAtTime(.0005,t0+d);o.connect(gn);gn.connect(M);o.start(t0);o.stop(t0+d+.02)}
 function bell(fr,t0,d,v){if(!AC)return;const o=AC.createOscillator(),gn=AC.createGain();o.type='sine';o.frequency.value=fr;gn.gain.setValueAtTime(.0001,t0);gn.gain.linearRampToValueAtTime(v,t0+.06);gn.gain.exponentialRampToValueAtTime(.001,t0+d);o.connect(gn);gn.connect(M);o.start(t0);o.stop(t0+d+.05)}
 function squelch(t0){if(!AC)return;const n=AC.sampleRate*.35|0,b=AC.createBuffer(1,n,AC.sampleRate),a=b.getChannelData(0);for(let i=0;i<n;i++)a[i]=Math.random()*2-1;
  const s=AC.createBufferSource(),fl=AC.createBiquadFilter(),gn=AC.createGain();s.buffer=b;fl.type='lowpass';fl.Q.value=6;fl.frequency.setValueAtTime(1100,t0);fl.frequency.exponentialRampToValueAtTime(140,t0+.3);
@@ -97,7 +99,7 @@ function sfx(k){if(!AC)return;const t=AC.currentTime;
  if(k==2){noise(t,.3,.2);tone(300,t,.4,'sawtooth',.1,60)}
  if(k==3){noise(t,.15,.2);tone(90,t,.25,'sine',.3,40)}
  if(k==4)tone(300,t,.1,'square',.06,600);
- if(k==5){[[2350,.045,1.0],[2362,.03,.9],[1175,.02,.8]].forEach(([fr,v,d])=>bell(fr,t,d,v))}
+ if(k==5){[[1,.065,.4],[2.76,.06,.22],[5.4,.04,.12],[8.9,.025,.07]].forEach(([m,v,d])=>strike(2637*m,t,d,v))}
  if(k==6)squelch(t)}
 const MEL=[[0,4,7,4,9,7,4,2,0,4,7,9,12,9,7,4],[0,4,7,4,9,7,4,2,0,4,7,9,12,9,7,4],[0,3,7,3,8,7,3,2,0,3,7,10,12,10,7,3],[0,0,12,0,10,0,8,0,7,7,8,7,3,3,2,3]];
 function sched(){
@@ -139,7 +141,7 @@ function scn(){
   else{if(i%2){g.beginPath();g.arc(x+30,GY+6,40+h,Math.PI,0);g.fill()}else{g.fillRect(x+18,GY-20,8,20);g.beginPath();g.arc(x+22,GY-32,18,0,7);g.fill()}}
  }
 }
-function dMW(x,pp){g.fillStyle='#cfd3da';g.fillRect(x,GY-34,36,34);g.fillStyle='#2b3a4a';g.fillRect(x+3,GY-30,21,24);g.fillStyle='#8fd8ff';g.fillRect(x+5,GY-28,17,20);if(pp){g.fillStyle=`rgba(255,226,110,${.14+.1*Math.sin(f/10)})`;g.fillRect(x+5,GY-28,17,20)}g.fillStyle='#555';for(let i=0;i<3;i++)g.fillRect(x+27,GY-30+i*8,6,4)}
+function dMW(x,pp){g.fillStyle='#2b3a4a';g.fillRect(x+4,GY-34,28,9);g.font='bold 7px sans-serif';g.textAlign='center';g.fillStyle='#fff';g.fillText('レンジ',x+18,GY-27);g.fillStyle='#cfd3da';g.fillRect(x,GY-25,36,25);g.fillStyle='#2b3a4a';g.fillRect(x+3,GY-22,21,18);g.fillStyle='#8fd8ff';g.fillRect(x+5,GY-20,17,14);if(pp){g.fillStyle=`rgba(255,226,110,${.14+.1*Math.sin(f/10)})`;g.fillRect(x+5,GY-20,17,14)}g.fillStyle='#555';for(let i=0;i<3;i++)g.fillRect(x+27,GY-22+i*6,6,3)}
 function dPap(x,y){g.fillStyle='#ff9a2e';g.beginPath();g.ellipse(x+12,y,12,16,.3,0,7);g.fill();g.fillStyle='#ffd27a';g.beginPath();g.ellipse(x+12,y,6,11,.3,0,7);g.fill();g.fillStyle='#222';for(let i=0;i<3;i++)g.fillRect(x+10,y-6+i*5,3,3)}
 function dBall(x,y){g.fillStyle='#e8731a';g.beginPath();g.arc(x,y,9,0,7);g.fill();g.strokeStyle='#5a2a08';g.lineWidth=1.5;g.beginPath();g.moveTo(x-9,y);g.lineTo(x+9,y);g.moveTo(x,y-9);g.lineTo(x,y+9);g.stroke()}
 function dNatto(x0){const x=0;g.save();g.translate(x0,0);g.scale(.7,1);
@@ -224,8 +226,14 @@ function upd(){
  if(stage==10&&dist>=L){st='win';tm=0}
 }
 function render(){
+ if(rpl){const n=RING.length,k=Math.floor(rpi/3);const o=RING.length<RN?0:rpos;
+  g.drawImage(RING[(o+Math.min(k,n-1))%n],0,0);tx("REPLAY",W/2,24,14,'#fff');
+  if(++rpi>n*3+40){rpl=0;RP.disabled=false}
+  RC.style.display=RB.style.display=RP.style.display='none';return}
  bg();
  RC.style.display=RB.style.display=((st=='over'||st=='win')&&tm>45)?'block':'none';
+ RP.style.display=(st=='over'&&tm>45&&RING.length>10)?'block':'none';
+
  if(st=='title'){
   tx('ぼでぃそを起こせ!',W/2,62,34,'#fff');
   dMir(W/2,GY-4+Math.sin(f/8)*-6*(f%48<24?1:0),96);
@@ -296,10 +304,11 @@ function render(){
    if(tipT>25&&f%60<40)tx('タップでスタート',W/2,by+bh+22,14,'#fff')}
 }
 let last=0,acc=0;
-function loop(t){acc+=Math.min(50,t-last);last=t;while(acc>=16.67){if(!paused)upd();acc-=16.67}render();requestAnimationFrame(loop)}
-function newRun(){stage=1;pap=1+Math.floor(Math.random()*9);frogStage=6+Math.floor(Math.random()*5);salt=Math.floor(Math.random()*1e6)}
+function cap(){if(paused||rpl||!['run','dead'].includes(st))return;if(++rcnt%3)return;let c;if(RING.length<RN){c=document.createElement('canvas');c.width=W;c.height=H;RING.push(c)}else{c=RING[rpos];rpos=(rpos+1)%RN}c.getContext('2d').drawImage(cv,0,0)}
+function loop(t){acc+=Math.min(50,t-last);last=t;while(acc>=16.67){if(!paused)upd();acc-=16.67}render();cap();requestAnimationFrame(loop)}
+function newRun(){RING.length=0;rpos=0;rcnt=0;stage=1;pap=1+Math.floor(Math.random()*9);frogStage=6+Math.floor(Math.random()*5);salt=Math.floor(Math.random()*1e6)}
 function down(){
- if(paused)return;
+ if(paused||rpl)return;
  aud();
  if(st=='title'){newRun();begin(1)}
  else if(st=='over'&&tm>25){newRun();begin(1)}
@@ -323,6 +332,7 @@ $('b2').onclick=()=>{paused=0;show('');newRun();begin(1)};
 $('b3').onclick=()=>{PI.src=pend;show('ph')};
 $('b5').onclick=()=>show(paused?'pm':'');
 $('b4').onclick=$('rb').onclick=()=>{location.href='./'};
+RP.onclick=()=>{if(RING.length>10){rpl=1;rpi=0}};
 $('rc').onclick=()=>{pend=snapOf(st=='win'?'ぼでぃそを起こせ! 全10ステージクリア!':'ぼでぃそを起こせ! STAGE '+stage+' でダウン ('+pct()+'%)');PI.src=pend;show('ph')};
 $('m').onclick=e=>{mute=!mute;if(M)M.gain.value=mute?0:1;e.target.textContent=mute?'×':'♪'};
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
