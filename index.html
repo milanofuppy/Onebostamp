@@ -49,6 +49,12 @@ button:active:not(:disabled){transform:scale(.97)}
 .rsb:disabled{opacity:.3;cursor:default}
 #rs,#rs2{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:20px}
 #rs[hidden],#rs2[hidden]{display:none}
+#gsel{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:20px}
+#gsel[hidden]{display:none}
+#gsel .rsbox{max-width:360px}
+#gsel .rsbox button.gopt{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:14px 16px}
+#gsel .rsbox button.gopt b{font-size:17px}
+#gsel .rsbox button.gopt small{font-size:12px;font-weight:500;color:var(--sub)}
 .rsbox{width:100%;max-width:340px;background:var(--bg);color:var(--fg);border-radius:18px;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.4)}
 .rsbox h3{margin:0 0 6px;font-size:18px}.rsbox p{margin:0 0 16px;font-size:13px;color:var(--sub);line-height:1.5}
 .rsbox button{display:block;width:100%;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;border:1px solid var(--line);background:var(--tab);color:var(--fg)}
@@ -142,6 +148,7 @@ button:active:not(:disabled){transform:scale(.97)}
 .fl{object-fit:contain}
 
 #ld{color:#fff;text-align:center;padding:40px 0}
+@keyframes nshake{0%{transform:translate(0,0)}12%{transform:translate(-1.6px,.8px)}25%{transform:translate(1.6px,-.8px)}38%{transform:translate(-1.4px,-.6px)}50%{transform:translate(1.4px,.8px)}63%{transform:translate(-1.2px,.4px)}76%{transform:translate(1.2px,-.4px)}88%{transform:translate(-.6px,.2px)}100%{transform:translate(0,0)}}
 </style></head><body><div class="wrap">
 <div class="tabs" id="tabs"></div>
 <div class="name"><span>名前</span><input id="nm" maxlength="12" aria-label="名前"><button class="img-btn" id="sum">🖼 まとめ画像</button></div>
@@ -153,6 +160,10 @@ button:active:not(:disabled){transform:scale(.97)}
 <div id="rs" hidden><div class="rsbox"><h3>本当にリセットしますか？</h3><p>押したスタンプと日付が消えます。この操作は元に戻せません。名前は残ります。</p><button class="danger" id="rs1"></button><button class="danger" id="rsa">全員をリセット</button><button id="rsc">やめる</button></div></div>
 <div id="rs2" hidden class="rsov"><div class="rsbox"><h3 id="dlt"></h3><p>このメンバーのタブとスタンプの記録が消えます。この操作は元に戻せません。</p><button class="danger" id="dly">削除する</button><button id="dln">やめる</button></div></div>
 <button id="sec" aria-label="" tabindex="-1"></button>
+<div id="gsel" hidden><div class="rsbox"><h3>どっちのゲームで遊ぶ？</h3><p>遊びたいゲームを選んでください。</p>
+<button class="gopt" id="gs1"><b>おねぼう連打チャレンジ</b><small>2分間でおねぼうスタンプを何回押せるか挑戦</small></button>
+<button class="gopt" id="gs2"><b>ぼでぃそを起こせ</b><small>障害物を飛び越えて、寝ているぼでぃそを起こしに行く(全10ステージ)</small></button>
+<button id="gs0">やめる</button></div></div>
 <datalist id="gnames"></datalist>
 <div id="gm" hidden>
 <div id="gfloat"></div>
@@ -418,7 +429,16 @@ function openGame(){
 }
 function closeGame(){cancelAnimationFrame(G.raf);hideMenu();bgmStop();G.bgm=false;bgmUi();$("gm").hidden=true;G.state="ready"}
 let lt=0;
-$("sec").addEventListener("click",()=>{const t=Date.now();if(t-lt<500){lt=0;openGame()}else lt=t});
+let shk=0;
+function shakeNose(cb){const w=innerWidth,h=innerHeight,s=Math.max(w/853,h/1844),ox=(w-853*s)/2,oy=h-1844*s,u0=180,v0=1358,wu=144,hu=108;
+const bgi=getComputedStyle(document.body,"::before").backgroundImage;const d=document.createElement("div");
+d.style.cssText="position:fixed;z-index:6;pointer-events:none;left:"+(ox+u0*s)+"px;top:"+(oy+v0*s)+"px;width:"+(wu*s)+"px;height:"+(hu*s)+"px;background-image:"+bgi+";background-repeat:no-repeat;background-size:"+(853*s)+"px "+(1844*s)+"px;background-position:"+(-u0*s)+"px "+(-v0*s)+"px;-webkit-mask-image:radial-gradient(ellipse at center,#000 52%,transparent 70%);mask-image:radial-gradient(ellipse at center,#000 52%,transparent 70%);animation:nshake .42s linear";
+document.body.appendChild(d);setTimeout(()=>{d.remove();cb()},440)}
+$("sec").addEventListener("click",()=>{const t=Date.now();if(t-lt<500){lt=0;if(!shk){shk=1;shakeNose(()=>{shk=0;$("gsel").hidden=false})}}else lt=t});
+$("gs1").onclick=()=>{$("gsel").hidden=true;openGame()};
+$("gs2").onclick=()=>{location.href="bodiso.html"};
+$("gs0").onclick=()=>{$("gsel").hidden=true};
+$("gsel").addEventListener("click",e=>{if(e.target===$("gsel"))$("gsel").hidden=true});
 function placeSec(){
   const w=innerWidth,h=innerHeight,s=Math.max(w/853,h/1844),ox=(w-853*s)/2,oy=h-1844*s,z=120*s,b=$("sec");
   b.style.width=b.style.height=z+"px";b.style.left=(ox+250*s-z/2)+"px";b.style.top=(oy+1405*s-z/2)+"px";
