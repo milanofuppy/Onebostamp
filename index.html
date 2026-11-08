@@ -446,7 +446,7 @@ function sayCheck(now,rem){
   if(G.goal>0&&!G.sayHalf&&G.n>0&&G.n>=G.goal/2){G.sayHalf=true;sayShow("目標が見えてきました");return}
   if(G.n>0&&now-G.lastTap>3500&&now>G.sayIdleAt){G.sayIdleAt=now+15000;sayShow("休まず、休まず");return}
   let c=0;for(let i=G.taps.length-1;i>=0&&now-G.taps[i]<=2000;i--)c++;
-  if(c>=14&&now>G.sayFastAt){G.sayFastAt=now+20000;sayShow("速いです！")}
+  if(c>=14&&!G.sayFastDone){G.sayFastDone=true;sayShow("速いです！")}
 }
 const G={state:"ready",n:0,end:0,raf:0,fired:[],bgm:false,imgSet:false,name:"",goal:0,bestPrev:0,newBest:false};
 function fmt(ms){const s=Math.max(0,Math.ceil(ms/1000));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
@@ -571,7 +571,7 @@ $("gstartb").onclick=()=>{
   const iv=setInterval(()=>{k--;if(k>0)$("gcm").textContent=k;else{clearInterval(iv);$("gcm").textContent="スタート！";begin()}},1000);
 };
 function begin(){
-  setUi("play");saySched();G.fired=[false,false,false];G.taps=[];G.lastTap=performance.now();G.sayIdleAt=0;G.sayFastAt=0;G.sayHalf=false;G.sayLastFlag=true;G.end=performance.now()+DUR;
+  setUi("play");saySched();G.fired=[false,false,false];G.taps=[];G.lastTap=performance.now();G.sayIdleAt=0;G.sayFastDone=false;G.sayHalf=false;G.sayLastFlag=true;G.end=performance.now()+DUR;
   setTimeout(()=>{if(G.state==="play")$("gcm").textContent=""},700);
   G.raf=requestAnimationFrame(tick);
 }
